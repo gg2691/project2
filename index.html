@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>svg tooltip</title><!-- make your own with https://www.favicon.cc/-->
+        <link href="../favicon.ico" rel="shortcut icon" type="image/x-icon" />
+		<script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
+		<style type="text/css">
+            body{font-family:helvetica;}
+						#button1{
+ 	 		        font-family:helvetica;
+ 	                 font-size:18px;
+ 	                 color:#000000;
+ 	                 text-align:center;
+ 	                 padding:15px;
+ 	                 width:90px;
+ 	                 height:20px;
+ 	                 border-radius:20px;
+ 	                 letter-spacing:2px;
+									 border-color:#000000;
+									 border:2px solid;
+ 	                 cursor:pointer;
+									 position: absolute;
+									 left: 640px;
+                   top: 280px
+
+ 	 		    }
+            #chart1{padding:10px;}
+						rect:hover {
+							fill: pink;
+						}
+
+						#tooltip {
+							position: absolute;
+							width: 100px;
+							height: auto;
+							padding: 10px;
+							background-color: pink;
+							-webkit-border-radius: 10px;
+							-moz-border-radius: 10px;
+							border-radius: 10px;
+							-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+							-moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+							box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+							pointer-events: none;
+						}
+
+						#tooltip.hidden {
+							display: none;
+						}
+
+						#tooltip p {
+							margin: 0;
+							font-family: sans-serif;
+							font-size: 13px;
+							line-height: 16px;
+						}
+
+		</style>
+	</head>
+    <div id="button1">Compare</div>
+    <div id="chart1"></div>
+		<div id="chart2"></div>
+    <div id="moreInfo"></div>
+		<div class="section center">
+      <p>Click buttons to compare!</p>
+    </div>
+	<body>
+		<div id="tooltip" class="hidden">
+			<p><strong>zipcode:counts</strong></p>
+			<p><span id="value"></span></p>
+		</div>
+		<script type="text/javascript">
+
+
+
+
+		d3.csv("ratandnoise.csv")
+		.then(function(data){
+				drawChart1(data)
+		})
+		.catch(function(error){ console.log("error to function")})
+
+		d3.csv("ratandnoise.csv")
+		.then(function(data){
+				drawChart2(data)
+		})
+		.catch(function(error){ console.log("error to function")})
+
+	  	function drawChart1(data){
+			  	var w = 4000
+			  	var h = 600
+			  	var rScale = d3.scaleLinear().domain([0,90]).range([0,20])
+			  	var xScale = d3.scaleBand().domain(d3.range(data.length)).range([0,w]).round(true).paddingInner(.1)
+			  	var cScale = d3.scaleLinear().domain([0,90]).range([d3.rgb("#fbc7e6"), d3.rgb('#ac4481')])
+			  	var svg = d3.select("#chart1")
+										  .append("svg")
+									  	.attr("width",w)
+									  	.attr("height",4000)
+											// .style("border", "1px solid black");
+
+			  	svg.append("text")
+					   .attr("x", 300)
+						 .attr("y", 550)
+						 .attr("text-anchor", "middle")
+						 .attr("font-size", "15px")
+						 .attr("font-family", "sans-serif")
+						 .attr("fill", "#bb73b0")
+						 .text("Complaints on Rat Sighting in NYC (01-03/2019)")
+
+
+
+					svg.selectAll("circle1")
+					 	 .data(data)
+					 	 .enter()
+					 	 .append("circle")
+						 .attr("cx",function(d,i){
+							 if(d.zipcode<10033){
+									 return xScale(i)
+							 }
+							 if(d.zipcode<10452){
+									 return xScale(i-27)
+							 }
+							 if(d.zipcode<11103){
+									 return xScale(i-54)
+							 }
+							 if(d.zipcode<11225){
+									 return xScale(i-81)
+							 }
+							 if(d.zipcode<11372){
+									return xScale(i-108)
+							}
+							if(d.zipcode<11436){
+									return xScale(i-135)
+							}
+							 else{
+									 return xScale(i-162)
+								}
+
+						 })
+
+						 .attr("cy",function(d){
+							 if(d.zipcode<10033){
+									 return 70
+							 }
+							 if(d.zipcode<10452){
+									 return 140
+							 }
+							 if(d.zipcode<11103){
+									 return 210
+							 }
+							 if(d.zipcode<11225){
+									 return 280
+							 }
+							 if(d.zipcode<11372){
+									return 350
+							}
+							if(d.zipcode<11436){
+									return 420
+							}
+							 else{
+									 return 490
+								}
+
+						 })
+						 .attr("r", function(d,i){
+							   if(d.rat<12){
+								   return 3
+						 }
+						    else{
+								   return rScale(d.rat)
+								}
+							})
+						 .attr("fill",function(d){
+								 return cScale(d.rat)
+						 })
+						 .attr("opacity",.5)
+						 .style("stroke", "black")
+
+						 .on("mouseover",function(d){
+								 /*this time we are using (this) to get the position of the bar so we know where to put the tooltip
+								 we will make 2 variables, for the x and y of the bar
+								 */
+								 var tx = parseFloat(d3.select(this).attr("cx"))/*tx for tooltip's x,
+								 we also make sure it is a number by calling parseFloat on the whole thing*/
+								 var ty = parseFloat(d3.select(this).attr("cy"))//ty for tooltip's y
+
+								 d3.select("#tooltip")
+									 .style("left", tx  +"px")
+									 .style("top", ty + (-60) +"px")
+									 .select("#value")
+									 .text(d.zipcode+":"+d.rat);
+
+
+								 //Show the tooltip
+								 d3.select("#tooltip").classed("hidden", false);
+               })
+						 .on("mouseout",function(d){
+								 d3.selectAll(".tooltip")//select everything that has the class tooltip, in our case just the text we appended
+										.remove()//remove it
+								})
+
+
+
+					var button = d3.select("#button1")
+											 .on("click",function(){
+											 //start rotation code
+										 d3.selectAll("circle")//select all the rectangles
+											 .transition()//start the transition, set duration and delay
+											 .duration(500)
+											 .delay(function(d,i){
+												 if(i<164){
+														 return i*30
+												 }else{
+													 return 20000000000000000000
+												 }
+											 })//delay is by index, so the first item is delayed 200, 2nd is 2*200 and so on
+											 .attr("transform", "translate(789.5, 0)")
+										 })
+
+              }
+
+
+
+
+
+
+
+
+						 function drawChart2(data){
+					 			var w = 4000
+					 			var h = 600
+					 			var rScale = d3.scaleLinear().domain([0,375]).range([0,20])
+					 			var xScale = d3.scaleBand().domain(d3.range(data.length)).range([0,w]).round(true).paddingInner(.1)
+					 			var cScale = d3.scaleLinear().domain([0,90]).range([d3.rgb("#c8d7ea"), d3.rgb('#8cb1dd')]);
+					 			var svg = d3.select("#chart2")
+					 									.append("svg")
+					 									.attr("width",w/4)
+					 									.attr("height",4000)
+														.attr("transform", "translate(800, -4014)")
+														// .attr("transform",function(d){
+														//   return "translate("600","0")"
+														// })
+														// .style("border", "1px solid black");
+
+
+						 	svg.append("text")
+						 		 .attr("x", 300)
+						 		 .attr("y", 550)
+						 		 .attr("text-anchor", "middle")
+						 		 .attr("font-size", "15px")
+						 		 .attr("font-family", "sans-serif")
+						 		 .attr("fill", "#355dce")
+						 		 .text("Complaints on Vehicle Noise in NYC (01-03/2019)")
+
+					 			svg.selectAll("circle2")
+					 				 .data(data)
+					 				 .enter()
+					 				 .append("circle")
+					 				 .attr("cx",function(d,i){
+					 					 if(d.zipcode<10033){
+					 							 return xScale(i)
+					 					 }
+					 					 if(d.zipcode<10452){
+					 							 return xScale(i-27)
+					 					 }
+					 					 if(d.zipcode<11103){
+					 							 return xScale(i-54)
+					 					 }
+					 					 if(d.zipcode<11225){
+					 							 return xScale(i-81)
+					 					 }
+					 					 if(d.zipcode<11372){
+					 							return xScale(i-108)
+					 					}
+					 					if(d.zipcode<11436){
+					 							return xScale(i-135)
+					 					}
+					 					 else{
+					 							 return xScale(i-162)
+					 						}
+
+					 				 })
+
+					 				 .attr("cy",function(d){
+					 					 if(d.zipcode<10033){
+					 							 return 70
+					 					 }
+					 					 if(d.zipcode<10452){
+					 							 return 140
+					 					 }
+					 					 if(d.zipcode<11103){
+					 							 return 210
+					 					 }
+					 					 if(d.zipcode<11225){
+					 							 return 280
+					 					 }
+					 					 if(d.zipcode<11372){
+					 							return 350
+					 					}
+					 					if(d.zipcode<11436){
+					 							return 420
+					 					}
+					 					 else{
+					 							 return 490
+					 						}
+
+					 				 })
+					 				 .attr("r", function(d,i){
+					 						 if(d.noise<12){
+					 							 return 3
+					 				 }
+					 						else{
+					 							 return rScale(d.noise)
+					 						}
+					 					})
+					 				 .attr("fill",function(d){
+					 						 return cScale(d.noise)
+					 				 })
+									 .attr("opacity",.5)
+									 .style("stroke", "black")
+
+									 .on("mouseover",function(d){
+											 /*this time we are using (this) to get the position of the bar so we know where to put the tooltip
+											 we will make 2 variables, for the x and y of the bar
+											 */
+											 var tx = parseFloat(d3.select(this).attr("cx"))/*tx for tooltip's x,
+											 we also make sure it is a number by calling parseFloat on the whole thing*/
+											 var ty = parseFloat(d3.select(this).attr("cy"))//ty for tooltip's y
+
+											 d3.select("#tooltip")
+												 .style("left", tx + "px")
+												 .style("top", ty + "px")
+												 .select("#value")
+												 .text(d.zipcode+":"+d.noise);
+
+
+											 //Show the tooltip
+											 d3.select("#tooltip").classed("hidden", false);
+			               })
+									 .on("mouseout",function(d){
+											 d3.selectAll(".tooltip")//select everything that has the class tooltip, in our case just the text we appended
+													.remove()//remove it
+											})
+
+
+
+
+
+
+
+    }
+   </script>
+ </body>
+</html>
